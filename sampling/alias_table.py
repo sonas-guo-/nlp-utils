@@ -2,47 +2,56 @@
 
 from random import randrange,random
 import numpy as np
+from datetime import datetime
 
 class AliasTable():
     def __init__(self,probs):
+        self.probs=probs
         probs=np.array(probs)
-        self.probs=probs/np.sum(probs)
-        self.bins=len(probs)        
-        self.A=np.zeros((self.bins,3))
+        self.bins=len(probs) 
+        probs=probs*self.bins/np.sum(probs)    
+        self.p_table=np.ones(self.bins,dtype=np.float64)
+        self.b_table=np.zeros(self.bins,dtype=np.int64)
         p=1/self.bins
         L,H=[],[]
         for i in range(self.bins):
-            if self.probs[i]<=p:
+            if probs[i]<1:
                 L.append(i)
-                self.A[i,1]=self.A[i,2]=i
             else:
                 H.append(i)
-                self.A[i,1]=self.A[i,2]=i
         
         while len(L)>0 and len(H)>0:
             l=L.pop()
             h=H.pop()
-            self.A[l,0]=self.probs[l]
-            self.A[l,1]=l
-            self.A[l,2]=h
-            self.probs[h]=self.probs[h]+self.probs[l]-p
-            self.probs[l]=p
-            if self.probs[h]>p:
-                H.append(h)
-            else:
+            self.p_table[l]=probs[l]
+            self.b_table[l]=h
+            probs[h]=probs[h]-(1-probs[l])
+            if probs[h]<1:
                 L.append(h)
+            else:
+                H.append(h)
+
+        while len(L)>0:
+            l=L.pop()
+            self.p_table[l]=1
+
+        while len(H)>0:
+            h=H.pop()
+            self.p_table[H]=1
+            
     def sample(self):  
         b=randrange(self.bins)
-        (p,i,h)=self.A[b]
-        if self.bins*p<=random():
-            return int(h)
+        if random()<self.p_table[b]:
+            return b
         else:
-            return int(i)
+            return self.b_table[b]
+
 
 if __name__=='__main__':
-    at=AliasTable([1,10])
-    test=np.zeros(2)
-    for i in range(100000):
-        t=at.sample()    
-        test[t]+=1
-    print(test)
+    test=[0,1,2]
+    at=AliasTable(test)
+    t=at.sample()    
+    
+    
+
+    
