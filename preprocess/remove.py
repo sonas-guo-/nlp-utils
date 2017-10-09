@@ -6,7 +6,7 @@ from string import punctuation
 '''
 def remove_cn_symbols(content):
     assert type(content)==str
-    re.sub(r'[\uff00-\uffef]','',content)
+    return re.sub(r'[\uff00-\uffef]','',content)
 '''
 移除英文符号
 '''
